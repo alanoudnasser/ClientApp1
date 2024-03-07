@@ -3,6 +3,7 @@ package com.example.clientapp;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -29,11 +30,21 @@ public class MainActivity extends AppCompatActivity {
     private int blueColor;
     private EditText edMessage;
 
+    String modulus = "00:af:b7:c7:84:23:69:2f:7b:4b:47:fe:48:b7:54:\n" +
+            "93:ac:30:27:05:81:ea:25:9d:b2:af:6c:bd:a2:2a:\n" +
+            "4e:29:f8:40:30:e1:27:20:51:c5:fa:37:5a:3a:0a:\n" +
+            "5a:aa:e0:45:35:c3:6d:25:19:d9:cd:ba:da:66:57:\n" +
+            "5d:1d:b8:88:b7"; // Replace with your modulus
+
+    String exponent = "10001"; // Exponent in hex
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setTitle("Client");
+        modulus = modulus.replace(":", "").replace("\n", "").replace(" ", "");
+
 
         blueColor = ContextCompat.getColor(this, R.color.blue);
         handler = new Handler();
@@ -110,17 +121,29 @@ public class MainActivity extends AppCompatActivity {
 
     private void sendMessage() {
         final String message = edMessage.getText().toString().trim();
+        String encryptedText = null;
+        try {
+            RSAEncryptor encryptor = new RSAEncryptor(modulus, exponent);
+             encryptedText = encryptor.encrypt(message);
+          //  Log.d("Encrypted Text", encryptedText);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         if (!message.isEmpty()) {
+            String finalEncryptedText = encryptedText;
+            Log.d("dec", encryptedText);
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        output.println(message);
+                        output.println(finalEncryptedText);
                         output.flush();
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                showMessage("Client: " + message, blueColor);
+                                showMessage("Client: " + finalEncryptedText, blueColor);
                             }
                         });
                     } catch (Exception e) {
